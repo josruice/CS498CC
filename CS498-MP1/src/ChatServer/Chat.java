@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public class Chat extends HttpServlet {
     public static String getMessage(){
-        return "Pene";
+        return "Dick";
     }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
