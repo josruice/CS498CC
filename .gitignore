@@ -1,0 +1,15 @@
+# Mac OS X stuff.
+.DS_Store
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Other stuff.
+*.swp
