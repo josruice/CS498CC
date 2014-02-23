@@ -10,11 +10,11 @@
 <html>
 <head>
     <title>CS498 - Chat</title>
-    <script src="jquery/jquery-2.0.3.min.js"></script>
-    <script src="bootstrap/js/bootstrap.min.js"></script>
-    <script type=text/javascript src="main.js"></script>
-    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="main.css">
+    <script src="/static/js/jquery-2.0.3.min.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+    <script type=text/javascript src="/static/js/main.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
 </head>
 
 <body>
