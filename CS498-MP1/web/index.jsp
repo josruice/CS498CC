@@ -9,9 +9,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
   <head>
-    <title></title>
+    <title>Testing</title>
   </head>
   <body>
     <h3 class="message"><%=Chat.getMessage()%></h3>
+    <form action="jspAction" method="get">
+        <input type="submit" value="Submit" />
+    </form>
   </body>
 </html>
