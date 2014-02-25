@@ -20,6 +20,7 @@ public class Chat extends HttpServlet {
 
     // Class constants.
     public final double CHAR_COST = 0.1;
+    public final String LB_COOKIE_NAME = "JSESSIONID";
 
     // Class attributes.
     private int lastMessageIndex;
@@ -43,37 +44,36 @@ public class Chat extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         for(Cookie c : request.getCookies()){
-            //TODO: separate Load Balancer cookie from the rest.
-            String cookieKey = hashCookie(c);
-            if(history.containsKey(cookieKey)){
-                // Cookie already in the map. Check last received message.
-                Integer lastReceived = history.get(cookieKey);
+            if(c.getName().equals(LB_COOKIE_NAME)){
+                String cookieKey = hashCookie(c);
+                if(history.containsKey(cookieKey)){
+                    // Cookie already in the map. Check last received message.
+                    Integer lastReceived = history.get(cookieKey);
 
-                // Check if there are messages not received yet.
-                if(lastReceived < lastMessageIndex){
-                    // Get those messages (last element is not included).
-                    Collection<Message> notRcvMsgs = messages.subList(lastReceived+1, messages.size());
+                    // Check if there are messages not received yet.
+                    if(lastReceived < lastMessageIndex){
+                        // Get those messages (last element is not included).
+                        Collection<Message> notRcvMsgs = messages.subList(lastReceived+1, messages.size());
 
-                    // Serialize with Gson.
-                    Gson gson = new Gson();
-                    String msgs = gson.toJson(notRcvMsgs);
+                        // Serialize with Gson.
+                        Gson gson = new Gson();
+                        String msgs = gson.toJson(notRcvMsgs);
 
-                    // Add them to the response message.
-                    PrintWriter pw = response.getWriter();
-                    pw.print(msgs);
-                    pw.flush();
+                        // Add them to the response message.
+                        PrintWriter pw = response.getWriter();
+                        pw.print(msgs);
+                        pw.flush();
 
-                    // Update the last message received.
-                    history.put(cookieKey, lastMessageIndex);
-
-                    // Is it required to send again the cookie?
-                    //response.addCookie(c);
+                        // Update the last message received.
+                        history.put(cookieKey, lastMessageIndex);
+                    }
                 }
-            }
-            else {
-                // Cookie not in the map. New user.
-                history.put(cookieKey, lastMessageIndex);
-                charges.put(cookieKey, 0.0);
+                else {
+                    // Cookie not in the map. New user.
+                    history.put(cookieKey, lastMessageIndex);
+                    charges.put(cookieKey, 0.0);
+                }
+                break;
             }
         }
         // Send ok (200) response.
@@ -81,7 +81,8 @@ public class Chat extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("Post!");
         // Extract the request content (JSON object) and build a string with it.
         StringBuffer sb = new StringBuffer();
         BufferedReader br = new BufferedReader(request.getReader());
@@ -98,20 +99,22 @@ public class Chat extends HttpServlet {
 
         // Update the charges applied to this client.
         for(Cookie c : request.getCookies()){
-            //TODO: separate Load Balancer cookie from the rest.
-            double prevCharge = 0.0;
-            String cookieKey = hashCookie(c);
-            if(!history.containsKey(cookieKey)){
-                // Cookie not in the map. New user.
-                history.put(cookieKey, lastMessageIndex);
+            if(c.getName().equals(LB_COOKIE_NAME)){
+                double prevCharge = 0.0;
+                String cookieKey = hashCookie(c);
+                if(!history.containsKey(cookieKey)){
+                    // Cookie not in the map. New user.
+                    history.put(cookieKey, lastMessageIndex);
+                }
+                else {
+                    // Cookie already in the map. Add the message cost.
+                    prevCharge = charges.get(cookieKey);
+                }
+                double newCharge = prevCharge + (newMsg.getContentLength() * CHAR_COST);
+                System.out.println(newCharge);
+                charges.put(cookieKey, newCharge);
+                break;
             }
-            else {
-                // Cookie already in the map. Add the message cost.
-                prevCharge = charges.get(cookieKey);
-            }
-            double newCharge = prevCharge + (newMsg.getContentLength() * CHAR_COST);
-            System.out.println(newCharge);
-            charges.put(cookieKey, newCharge);
         }
 
         // Add the object to the Message list and update the counter.
@@ -131,12 +134,7 @@ public class Chat extends HttpServlet {
     // Method to build a String key with the cookie information (hash method of Cookie class does not work as expected).
     private String hashCookie(Cookie c){
         StringBuffer cookieBuffer = new StringBuffer();
-
-        cookieBuffer.append(c.getName());
         cookieBuffer.append(c.getValue());
-        cookieBuffer.append(c.getDomain());
-        cookieBuffer.append(c.getComment());
-
         return cookieBuffer.toString();
     }
 }
