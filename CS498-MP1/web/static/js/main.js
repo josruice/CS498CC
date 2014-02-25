@@ -1,9 +1,9 @@
-var LOAD_BALANCER_IP = "127.0.0.1";
-var COOOKIE_NAME = "my-cookie";
+var LOAD_BALANCER_IP = "http://Team40LoadBalancer-899630239.us-east-1.elb.amazonaws.com:8080/Chat/chat";
 var GENERATE_MODE = false;
 
 var session_cost = 0;
 var count = 0;
+var name = "default_name";
 
 var textBox;
 var costForm;
@@ -19,6 +19,15 @@ $(document).ready(function(){
     costForm = $('#costform');
     textForm = $('#textform');
 
+    name = prompt("Please enter your name", name);
+
+    window.onbeforeunload = function() {
+        var r = confirm("You are exiting the page. Would you like to notify the other chat-room guests that you're exiting?");
+        if (r == true) {
+            send_message(name + " is exiting the chatroom.");
+        }
+    };
+
     handle_message_submit($('#messageform'));
     if(GENERATE_MODE)
         generateInterval = setInterval(function(){generate_messages();}, 5000);
@@ -31,17 +40,27 @@ function get_messages() {
     console.log("Getting Messages");
     $.ajax({
         type: "GET",
-        //	url: LOAD_BALANCER_IP,
-        crossDomain: true,
-        dataType: 'json',
+        url: LOAD_BALANCER_IP,
         success: function (data) {
-            var messages = $.parseJSON(data);
-            for (i=0; i<this.messages; i++) {
-                append_message("other", messages[i]);
+            console.log(data);
+            console.log("success");
+            if(data.length != 0){
+                console.log(data);
+                var messages = $.parseJSON(data);
+                for(var i =0; i < messages.length; i++) {
+                    append_message(messages[i].author,messages[i].content);
+                }
             }
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {
-            alert("Get Unsuccessful");
+        error: function(e) {
+            console.log(e.status);
+            if(e.status == 200){
+                console.log(e.responseText);
+            }
+            else {
+                alert("Get Unsuccessful");
+                console.log(e);
+            }
         }
     });
 }
@@ -63,17 +82,26 @@ function handle_message_submit(form) {
 function send_message(text) {
     $.ajax({
         type: "POST",
-        //	url: LOAD_BALANCER_IP,
-        crossDomain: true,
+        url: LOAD_BALANCER_IP,
         dataType: 'json',
-        data: {message: text},
+        data: JSON.stringify({
+            author: name,
+            content: text.toString()
+        }),
         success: function (data) {
             add_cost(text.length);
-            textForm.html("");
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {
             textForm.val("");
-            alert("Send Unsuccessful");
+        },
+        error: function(e) {
+            if(e.status == 200){
+                console.log("Send Successful");
+                add_cost(text.length);
+            }
+            else {
+                alert("Send Unsuccessful");
+                console.log(e);
+            }
+            textForm.val("");
         }
     });
 }
