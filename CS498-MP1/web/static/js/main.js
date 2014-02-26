@@ -1,4 +1,5 @@
-var LOAD_BALANCER_IP = "http://Team40LoadBalancer-899630239.us-east-1.elb.amazonaws.com:8080/Chat/chat";
+var LOAD_BALANCER_IP = "http://localhost:8080/Chat/chat";
+//var LOAD_BALANCER_IP = "http://Team40LoadBalancer-899630239.us-east-1.elb.amazonaws.com:8080/Chat/chat";
 var GENERATE_MODE = false;
 
 var session_cost = 0;
@@ -21,12 +22,25 @@ $(document).ready(function(){
 
     name = prompt("Please enter your name", name);
 
-    window.onbeforeunload = function() {
-        var r = confirm("You are exiting the page. Would you like to notify the other chat-room guests that you're exiting?");
-        if (r == true) {
-            send_message(name + " is exiting the chatroom.");
+    $.("#exit").click(function(){
+       console.log("clicked");
+    });
+
+    window.onunload = window.onbeforeunload = (function(){
+
+        var didMyThingYet=false;
+
+        return function(){
+            if (didMyThingYet) return;
+            didMyThingYet=true;
+            alert("wtf");
+            var r = confirm("You are exiting the page. Would you like to notify the other chat-room guests that you're exiting?");
+            if (r == true) {
+                send_message(name + " is exiting the chatroom.");
+            }
         }
-    };
+
+    }());
 
     handle_message_submit($('#messageform'));
     if(GENERATE_MODE)
